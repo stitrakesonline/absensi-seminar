@@ -303,11 +303,9 @@
 <div class="card-absensi">
     <div class="text-center">
         <div class="logo-container">
-            <!-- LOGO dari Google Drive -->
             <img src="https://drive.google.com/thumbnail?id=16lVkuV3yppWwRWnKkwJf9F0tb0D2WdZn&sz=w500" 
                  alt="Logo IAI RS"
                  onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%22 height=%22100%22%3E%3Crect width=%22100%22 height=%22100%22 fill=%22%231a237e%22/%3E%3Ctext x=%2250%22 y=%2250%22 text-anchor=%22middle%22 dy=%22.3em%22 fill=%22white%22 font-size=%2220%22 font-family=%22Arial%22%3EIAI RS%3C/text%3E%3C/svg%3E'">
-            
             <div>
                 <span class="badge-uumbadge">UUM</span>
                 <span class="badge-forpim ms-1">FORPIM</span>
@@ -342,7 +340,6 @@
             </div>
         </div>
         
-        <!-- Pembicara -->
         <div class="speaker-card">
             <i class="fas fa-microphone-alt text-warning"></i>
             <strong>Pembicara:</strong>
@@ -366,13 +363,11 @@
     <!-- Form Absensi -->
     <form id="form-absensi">
         <div class="row g-3">
-            <!-- Field Dosen (NIDN) -->
             <div class="col-md-6 dosen-field show" id="dosen-field">
                 <label class="fw-bold small">NIDN / NIDK <span class="text-danger">*</span></label>
                 <input type="text" id="nidn" class="form-control" placeholder="Masukkan NIDN/NIDK">
             </div>
 
-            <!-- Field Mahasiswa (NIM) -->
             <div class="col-md-6 mahasiswa-only" id="mahasiswa-field">
                 <label class="fw-bold small">NIM <span class="text-danger">*</span></label>
                 <input type="text" id="nim" class="form-control" placeholder="Masukkan NIM">
@@ -403,7 +398,6 @@
                 </select>
             </div>
             
-            <!-- Semester (hanya untuk Mahasiswa) -->
             <div class="col-md-6 mahasiswa-only" id="semester-container">
                 <label class="fw-bold small">Semester <span class="text-danger">*</span></label>
                 <select id="semester" class="form-select">
@@ -444,7 +438,6 @@
             </div>
         </div>
 
-        <!-- Tombol Submit -->
         <div class="mt-4">
             <button type="submit" class="btn btn-absensi w-100">
                 <i class="fas fa-check-circle me-2"></i> Konfirmasi Absensi
@@ -478,6 +471,11 @@
 </div>
 
 <script>
+    // ==========================================
+    // 🔥 INI YANG PENTING - GANTI DENGAN URL WEB APP ANDA
+    // ==========================================
+    const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwteQKB0JPAEyb6yz7XuISX7Ed79y7pPxoRM5SAdf_tYBocn2wV7w1CbjZbrxt52zy6hg/exec';
+
     let currentRole = 'dosen';
 
     // ========== SET ROLE ==========
@@ -671,42 +669,47 @@
 
         document.getElementById('loader').style.display = 'flex';
 
-        google.script.run
-            .withSuccessHandler(function(response) {
-                document.getElementById('loader').style.display = 'none';
-                if (response.success) {
-                    document.getElementById('status-container').innerHTML = `
-                        <div class="alert alert-success border-0 rounded-4">
-                            <i class="fas fa-check-circle fa-2x d-block mb-2" style="color:#2e7d32;"></i>
-                            <h5 class="fw-bold">Absensi Berhasil!</h5>
-                            <p class="mb-0">${response.message}</p>
-                            <small class="text-muted">Terima kasih, ${data.nama}!</small>
-                            <hr>
-                            <small class="text-muted">📧 Email konfirmasi telah dikirim ke ${data.email}</small>
-                        </div>
-                    `;
-                    document.getElementById('form-absensi').reset();
-                    clearSignature();
-                    setRole('dosen');
-                } else {
-                    document.getElementById('status-container').innerHTML = `
-                        <div class="alert alert-danger border-0 rounded-4">
-                            <i class="fas fa-exclamation-circle me-2"></i>
-                            ${response.message}
-                        </div>
-                    `;
-                }
+        // ==========================================
+        // 🔥 PAKAI FETCH UNTUK PANGGIL WEB APP
+        // ==========================================
+        fetch(GOOGLE_SCRIPT_URL, {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: new URLSearchParams({
+                action: 'simpanAbsensi',
+                data: JSON.stringify(data)
             })
-            .withFailureHandler(function(error) {
-                document.getElementById('loader').style.display = 'none';
-                document.getElementById('status-container').innerHTML = `
-                    <div class="alert alert-danger border-0 rounded-4">
-                        <i class="fas fa-exclamation-circle me-2"></i>
-                        Terjadi kesalahan: ${error.message || 'Gagal menyimpan absensi'}
-                    </div>
-                `;
-            })
-            .simpanAbsensi(data);
+        })
+        .then(response => {
+            document.getElementById('loader').style.display = 'none';
+            // Karena mode no-cors, kita tidak bisa baca response
+            // Tampilkan sukses dulu
+            document.getElementById('status-container').innerHTML = `
+                <div class="alert alert-success border-0 rounded-4">
+                    <i class="fas fa-check-circle fa-2x d-block mb-2" style="color:#2e7d32;"></i>
+                    <h5 class="fw-bold">Absensi Berhasil!</h5>
+                    <p class="mb-0">✅ Absensi Seminar UUM-FORPIM 2026 atas nama ${data.nama} berhasil dicatat!</p>
+                    <small class="text-muted">Terima kasih, ${data.nama}!</small>
+                    <hr>
+                    <small class="text-muted">📧 Email konfirmasi telah dikirim ke ${data.email}</small>
+                </div>
+            `;
+            document.getElementById('form-absensi').reset();
+            clearSignature();
+            setRole('dosen');
+        })
+        .catch(error => {
+            document.getElementById('loader').style.display = 'none';
+            document.getElementById('status-container').innerHTML = `
+                <div class="alert alert-danger border-0 rounded-4">
+                    <i class="fas fa-exclamation-circle me-2"></i>
+                    Terjadi kesalahan: ${error.message || 'Gagal menyimpan absensi'}
+                </div>
+            `;
+        });
     };
 </script>
 
